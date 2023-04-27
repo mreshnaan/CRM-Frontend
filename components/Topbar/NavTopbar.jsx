@@ -1,4 +1,4 @@
-import { Box, IconButton, useTheme } from "@mui/material";
+import { Box, Button, IconButton, useTheme } from "@mui/material";
 import { colors } from "../../theme";
 import InputBase from "@mui/material/InputBase";
 import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
@@ -6,8 +6,12 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import React from "react";
+import { unsetToken } from "@/lib/auth";
 
 function NavTopbar() {
+  const logout = () => {
+    unsetToken();
+  };
   return (
     <>
       <Box
@@ -39,7 +43,7 @@ function NavTopbar() {
           <IconButton>
             <SettingsOutlinedIcon style={{ color: colors.white[500] }} />
           </IconButton>
-          <IconButton>
+          <IconButton onClick={logout}>
             <PersonOutlinedIcon style={{ color: colors.white[500] }} />
           </IconButton>
         </Box>

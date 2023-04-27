@@ -3,7 +3,6 @@ import { Modal, Button, Typography } from "@mui/material";
 import Invoice from "../Invoice/invoice";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { toast } from "react-hot-toast";
 
 function InvoiceModel({ modelOpen, data, handleClose, handleInvoice }) {
   const invoiceRef = useRef(null);
