@@ -49,14 +49,13 @@ const Login = () => {
       );
       if (response.ok) {
         const userData = await response.json();
-
         setToken(userData);
+        toast.success("Successfully Login");
       } else {
         throw new Error(`Request failed with status ${response.status}`);
       }
-      toast.success("Successfully Login");
     } catch (error) {
-      toast.error("Invalid Username or password");
+      toast.error(error.message);
     }
     setSubmitting(false);
   };

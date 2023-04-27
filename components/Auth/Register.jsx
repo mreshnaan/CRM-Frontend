@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { Box, Typography, Button, TextField } from "@mui/material";
@@ -35,29 +35,29 @@ const Register = () => {
         return;
       }
 
-      const response = await fectcher(
+      const response = await fetch(
         `${process.env.NEXT_PUBLIC_STRAPI_URL}/auth/local/register`,
         {
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            username: values.identifier,
             email: values.email,
             password: values.password,
-            username: values.username,
           }),
           method: "POST",
         }
       );
       if (response.ok) {
-        toast.success("Successfully Created");
-        setToken(response);
+        const userData = await response.json();
+        setToken(userData);
+        toast.success("Successfully Register");
       } else {
-        throw new Error(`Request failed with status ${response.status}`);
+        toast.error("Invalid Username or password");
       }
     } catch (error) {
       toast.error(error.message);
-      console.error("error with request", error);
     }
     setSubmitting(false);
   };
@@ -165,7 +165,7 @@ const Register = () => {
                 fullWidth
                 sx={{ mt: 3, mb: 2, p: 2, fontSize: "0.9rem" }}
               >
-                {isSubmitting ? "Logging in..." : "Log in"}
+                {isSubmitting ? "Logging in..." : "Register"}
               </Button>
               <Link
                 style={{
