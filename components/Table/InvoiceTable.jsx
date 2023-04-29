@@ -14,7 +14,7 @@ const InvoiceTable = ({ data, page, size, onPageChange, pageSize }) => {
   const [viewModel, setViewModel] = useState(false);
   const [updateModel, setUpdateModel] = useState(false);
   const [removeModel, setRemoveModel] = useState(false);
-  const [formData, setFormData] = useState(null);
+  const [tableData, setTableData] = useState(null);
 
   const handleViewClose = () => {
     setViewModel(false);
@@ -61,22 +61,20 @@ const InvoiceTable = ({ data, page, size, onPageChange, pageSize }) => {
       sortable: false,
       flex: 1,
       renderCell: (params) => {
-        const handleView = (data) => {
+        const handleView = (param) => {
           // Handle edit button click for this row
           setViewModel(true);
-          setFormData(data);
+          setTableData(param.row);
         };
-        const handleEdit = (data) => {
+        const handleEdit = (param) => {
           // Handle edit button click for this row
           setUpdateModel(true);
-          setFormData(data);
+          setTableData(param.row);
         };
 
-        const handleRemove = () => {
-          // Handle remove button click for this row
-          // setFormSubmitted({ data: id, open: true });
+        const handleRemove = (param) => {
           setRemoveModel(true);
-          setFormData(data);
+          setTableData(param.row);
         };
         return (
           <div>
@@ -161,21 +159,21 @@ const InvoiceTable = ({ data, page, size, onPageChange, pageSize }) => {
         {viewModel && (
           <ViewInvoiceModel
             modelOpen={viewModel}
-            data={formData}
+            data={tableData}
             handleClose={handleViewClose}
           />
         )}
         {updateModel && (
           <UpdateInvoiceModel
             modelOpen={updateModel}
-            data={formData}
+            data={tableData}
             handleClose={handleUpdateClose}
           />
         )}
         {removeModel && (
           <RemoveInvoiceModel
             modelOpen={removeModel}
-            data={formData}
+            data={tableData}
             handleClose={handleRemoveClose}
           />
         )}

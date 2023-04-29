@@ -77,6 +77,7 @@ function UpdateInvoiceModel({ modelOpen, data, handleClose }) {
         setInvoiceData({
           invoiceNumber: invoiceData.data.attributes.invoiceNumber,
           items: invoiceData.data.attributes.items,
+          payments: invoiceData.data.attributes.payments,
           customerName: `${invoiceData.data.attributes.customer.data.attributes.fName} ${invoiceData.data.attributes.customer.data.attributes.lName}`,
         });
       } else {

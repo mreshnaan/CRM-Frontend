@@ -18,8 +18,7 @@ import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import InvoiceModel from "../Models/InvoiceModel";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import moment from 'moment';
-
+import moment from "moment";
 
 // validation schema
 const checkoutSchema = yup.object().shape({
@@ -55,7 +54,6 @@ const InvoiceForm = ({
   });
 
   //check the customer is available in the customer data
-
   const isCheckCustomer =
     isUpdateForm &&
     customersData.find(
@@ -65,8 +63,8 @@ const InvoiceForm = ({
     );
 
   //form initial values
-  const initialValues = {
-    customerName: isUpdateForm ? isCheckCustomer : null,
+  const [initialValues, setInitialValues] = useState({
+    customerName: isCheckCustomer,
     items: isUpdateForm
       ? fromData.items.map((item) => ({
           itemCode: item.itemCode,
@@ -81,7 +79,8 @@ const InvoiceForm = ({
           date: payment.date,
         }))
       : [{ description: "", date: null, amount: "" }],
-  };
+  });
+
 
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState("");
@@ -96,21 +95,45 @@ const InvoiceForm = ({
   });
 
   useEffect(() => {
-    if (selectedCustomer) {
-      console.log(selectedCustomer.attributes);
-      // Update the customer details state with the selected customer's details
+    if (isUpdateForm) {
+      let getCustomer = customersData.find(
+        (customer) =>
+          `${customer.attributes.fName} ${customer.attributes.lName}` ===
+          fromData.customerName
+      );
+      console.log("getCustomer : ", getCustomer);
+      setInitialValues(
+        `${getCustomer.attributes.fName} ${getCustomer.attributes.lName}`
+      );
       setCustomerDetails({
-        address: selectedCustomer.attributes.address,
-        mobileNumber: selectedCustomer.attributes.mobile,
-        customerId: selectedCustomer.id,
+        address: getCustomer.attributes.address,
+        mobileNumber: getCustomer.attributes.mobile,
+        customerId: getCustomer.id,
       });
     } else {
-      // Reset the customer details state if no customer is selected
-      setCustomerDetails({
-        address: "",
-        mobileNumber: "",
-        customerId: "",
-      });
+      if (selectedCustomer) {
+        let getCustomer = customersData.find(
+          (customer) =>
+            `${customer.attributes.fName} ${customer.attributes.lName}` ===
+            `${selectedCustomer.attributes.fName} ${selectedCustomer.attributes.lName}`
+        );
+        setInitialValues(
+          `${getCustomer.attributes.fName} ${getCustomer.attributes.lName}`
+        );
+        // // Update the customer details state with the selected customer's details
+        setCustomerDetails({
+          address: getCustomer.attributes.address,
+          mobileNumber: getCustomer.attributes.mobile,
+          customerId: getCustomer.id,
+        });
+      } else {
+        // Reset the customer details state if no customer is selected
+        setCustomerDetails({
+          address: "",
+          mobileNumber: "",
+          customerId: "",
+        });
+      }
     }
   }, [selectedCustomer]);
 
@@ -208,7 +231,7 @@ const InvoiceForm = ({
                   sx={{ gridColumn: "span 4" }}
                   options={customersData}
                   getOptionLabel={(option) =>
-                    `${option?.attributes?.fName} ${option?.attributes?.lName}`
+                    `${option?.attributes.fName} ${option?.attributes.lName}`
                   }
                   value={selectedCustomer}
                   onChange={(event, newValue) => {
@@ -224,7 +247,7 @@ const InvoiceForm = ({
                       {...params}
                       label="Customer Name"
                       name="customerName"
-                      value={JSON.stringify(values.customerName)}
+                      value={values.customerName}
                       onBlur={handleBlur}
                       onChange={handleChange}
                       error={

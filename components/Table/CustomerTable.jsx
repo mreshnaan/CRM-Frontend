@@ -59,15 +59,15 @@ const CustomerTable = ({ data, page, size, onPageChange, pageSize }) => {
       sortable: false,
       flex: 1,
       renderCell: (params) => {
-        const handleEdit = (data) => {
+        const handleEdit = () => {
           // Handle edit button click for this row
           setUpdateModel(true);
-          setFormData(data);
+          setFormData(params);
         };
 
         const handleRemove = () => {
           setRemoveModel(true);
-          setFormData(data);
+          setFormData(params);
         };
         return (
           <div>

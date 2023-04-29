@@ -27,6 +27,10 @@ function RemoveCustomerModel({ modelOpen, data, handleClose }) {
     handleClose();
   };
 
+  const handleCancel = () =>{
+    handleClose()
+  }
+
   return (
     <>
       <div>
@@ -38,7 +42,7 @@ function RemoveCustomerModel({ modelOpen, data, handleClose }) {
               flexDirection: "column",
               gap: "20px",
               position: "absolute",
-              borderRadius:"16px",
+              borderRadius: "16px",
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%)",
@@ -48,7 +52,10 @@ function RemoveCustomerModel({ modelOpen, data, handleClose }) {
               p: 2,
             }}
           >
-            <Typography component={"h1"} sx={{ color: "black" ,fontSize:"1.1rem" }}>
+            <Typography
+              component={"h1"}
+              sx={{ color: "black", fontSize: "1.1rem" }}
+            >
               ARE YOU SURE YOU WANT DELETE THIS
             </Typography>
             <Box
@@ -57,11 +64,11 @@ function RemoveCustomerModel({ modelOpen, data, handleClose }) {
               <Button
                 color="secondary"
                 variant="contained"
-                onClick={handleRemoveCustomer()}
+                onClick={handleRemoveCustomer}
               >
                 Remove{" "}
               </Button>
-              <Button color="error" variant="contained" onClick={()=>{handleClose()}}>
+              <Button color="error" variant="contained" onClick={handleCancel}>
                 Cancel{" "}
               </Button>
             </Box>

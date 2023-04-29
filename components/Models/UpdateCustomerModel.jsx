@@ -90,6 +90,7 @@ function UpdateCustomerModel({ modelOpen, data, handleClose }) {
               transform: "translate(-50%, -50%)",
               width: "50%",
               bgcolor: "background.paper",
+              borderRadius:"16px",
               boxShadow: 24,
               p: 4,
             }}
