@@ -6,6 +6,7 @@ import Header from "../HeaderTitle";
 import { colors } from "@/theme";
 
 const CustomerForm = ({ isUpdateForm, fromData, setFromData }) => {
+  console.log("from data : ", fromData);
   const isNonMobile = useMediaQuery("(min-width:600px)");
   const initialValues = {
     firstName: isUpdateForm ? fromData.firstName : "",
@@ -67,11 +68,14 @@ const CustomerForm = ({ isUpdateForm, fromData, setFromData }) => {
               gap="30px"
               gridTemplateColumns="repeat(4, minmax(0, 1fr))"
               sx={{
+                "& .css-10botns-MuiInputBase-input-MuiFilledInput-input": {
+                  color: `${colors.grey[400]}!important`,
+                },
                 "& .css-16qgwi8-MuiFormLabel-root-MuiInputLabel-root": {
-                  color: `${colors.grey[400]}`,
+                  color: `${colors.grey[400]}!important`,
                 },
                 "& .css-16fmtdg-MuiInputBase-root-MuiFilledInput-root:before": {
-                  borderBottom: `1px solid ${colors.grey[400]} `,
+                  borderBottom: `1px solid ${colors.grey[400]}!important `,
                 },
                 color: `${colors.white[400]} !important`,
                 "& > div": { gridColumn: isNonMobile ? undefined : "span 4" },

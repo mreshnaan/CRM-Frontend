@@ -3,7 +3,6 @@ import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { Box, Typography, Button, TextField } from "@mui/material";
 import { setToken } from "../../lib/auth";
-import { fectcher } from "@/lib/api";
 import Link from "next/link";
 import { useFetchUser } from "@/lib/Context/auth";
 import { useRouter } from "next/router";

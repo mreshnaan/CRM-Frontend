@@ -1,5 +1,6 @@
-import { Box, IconButton, Select } from "@mui/material";
-import { DataGrid, GridDeleteIcon } from "@mui/x-data-grid";
+import { Box, IconButton } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+import ViewIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { colors } from "../../theme";
@@ -7,13 +8,23 @@ import Header from "../HeaderTitle";
 import { useState } from "react";
 import UpdateInvoiceModel from "../Models/UpdateInvoiceModel";
 import RemoveInvoiceModel from "../Models/RemoveInvoiceModel";
+import ViewInvoiceModel from "../Models/ViewInvoiceModel";
 
 const InvoiceTable = ({ data, page, size, onPageChange, pageSize }) => {
-  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [viewModel, setViewModel] = useState(false);
+  const [updateModel, setUpdateModel] = useState(false);
+  const [removeModel, setRemoveModel] = useState(false);
   const [formData, setFormData] = useState(null);
 
-  const handleClose = () => {
-    setFormSubmitted(false);
+  const handleViewClose = () => {
+    setViewModel(false);
+  };
+
+  const handleUpdateClose = () => {
+    setUpdateModel(false);
+  };
+  const handleRemoveClose = () => {
+    setRemoveModel(false);
   };
 
   const columns = [
@@ -37,17 +48,12 @@ const InvoiceTable = ({ data, page, size, onPageChange, pageSize }) => {
     },
     {
       field: "items",
-      headerName: "Items",
+      headerName: "Total",
       flex: 1,
-      renderCell: (params) => (
-        <Select fullWidth native className="item-select">
-          {params.value.map((item) => (
-            <option key={item.itemCode} className="item-options">
-              {item.itemCode} - {item.description} - ${item.price}
-            </option>
-          ))}
-        </Select>
-      ),
+      renderCell: (params) =>
+        params.value.reduce((total, item) => {
+          return total + parseFloat(item.price || 0);
+        }, 0),
     },
     {
       field: "actions",
@@ -55,18 +61,33 @@ const InvoiceTable = ({ data, page, size, onPageChange, pageSize }) => {
       sortable: false,
       flex: 1,
       renderCell: (params) => {
+        const handleView = (data) => {
+          // Handle edit button click for this row
+          setViewModel(true);
+          setFormData(data);
+        };
         const handleEdit = (data) => {
           // Handle edit button click for this row
-          setFormSubmitted(true);
+          setUpdateModel(true);
           setFormData(data);
         };
 
         const handleRemove = () => {
           // Handle remove button click for this row
           // setFormSubmitted({ data: id, open: true });
+          setRemoveModel(true);
+          setFormData(data);
         };
         return (
           <div>
+            <IconButton
+              sx={{ color: `${colors.grey[500]} !important` }}
+              onClick={() => {
+                handleView(params);
+              }}
+            >
+              <ViewIcon />
+            </IconButton>
             <IconButton
               sx={{ color: `${colors.grey[500]} !important` }}
               onClick={() => {
@@ -99,7 +120,7 @@ const InvoiceTable = ({ data, page, size, onPageChange, pageSize }) => {
 
   return (
     <Box m="20px">
-      <Header title="Customer" subtitle="List of Customer Invoice" />
+      <Header title="Customer Invoices" subtitle="List of Customer Invoice" />
       <Box
         m="40px 0 0 0"
         height="75vh"
@@ -137,18 +158,25 @@ const InvoiceTable = ({ data, page, size, onPageChange, pageSize }) => {
           },
         }}
       >
-        {formSubmitted && (
-          <UpdateInvoiceModel
-            modelOpen={formSubmitted}
+        {viewModel && (
+          <ViewInvoiceModel
+            modelOpen={viewModel}
             data={formData}
-            handleClose={handleClose}
+            handleClose={handleViewClose}
           />
         )}
-        {formSubmitted && (
-          <RemoveInvoiceModel
-            modelOpen={formSubmitted}
+        {updateModel && (
+          <UpdateInvoiceModel
+            modelOpen={updateModel}
             data={formData}
-            handleClose={handleClose}
+            handleClose={handleUpdateClose}
+          />
+        )}
+        {removeModel && (
+          <RemoveInvoiceModel
+            modelOpen={removeModel}
+            data={formData}
+            handleClose={handleRemoveClose}
           />
         )}
         <DataGrid

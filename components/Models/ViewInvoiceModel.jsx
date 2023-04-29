@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Modal, Box } from "@mui/material";
 import InvoiceForm from "../Form/InvoiceForm";
 import { toast } from "react-hot-toast";
-import  fectcher  from "@/lib/api";
+import fectcher from "@/lib/api";
 
-function UpdateInvoiceModel({ modelOpen, data, handleClose }) {
+function ViewInvoiceModel({ modelOpen, data, handleClose }) {
   const [invoiceData, setInvoiceData] = useState(null);
   const [customers, setCustomers] = useState(null);
 
@@ -14,38 +14,6 @@ function UpdateInvoiceModel({ modelOpen, data, handleClose }) {
       handleGetInvoice();
     }
   }, [data.id, modelOpen]);
-
-  const handleFormData = async (values) => {
-    console.log(values);
-    try {
-      if (data.id == null) return null;
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_STRAPI_URL}/invoices/${data.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            data: {
-              invoiceNumber: values.firstName,
-              customer: values.customerId,
-              items: values.items,
-            },
-          }),
-        }
-      );
-      if (response.ok) {
-        toast.success("Successfully Created");
-      } else {
-        throw new Error(`Request failed with status ${response.status}`);
-      }
-    } catch (error) {
-      toast.error(error);
-      console.error("error with request", error);
-    }
-    handleClose();
-  };
 
   const handleGetCustomers = async () => {
     try {
@@ -77,6 +45,7 @@ function UpdateInvoiceModel({ modelOpen, data, handleClose }) {
         setInvoiceData({
           invoiceNumber: invoiceData.data.attributes.invoiceNumber,
           items: invoiceData.data.attributes.items,
+          payments: invoiceData.data.attributes.payments,
           customerName: `${invoiceData.data.attributes.customer.data.attributes.fName} ${invoiceData.data.attributes.customer.data.attributes.lName}`,
         });
       } else {
@@ -127,10 +96,10 @@ function UpdateInvoiceModel({ modelOpen, data, handleClose }) {
              */}
             {invoiceData && (
               <InvoiceForm
+                isViewForm={true}
                 customersData={customers}
                 isUpdateForm={true}
                 fromData={invoiceData}
-                handleInvoice={handleFormData}
               />
             )}
           </Box>
@@ -140,4 +109,4 @@ function UpdateInvoiceModel({ modelOpen, data, handleClose }) {
   );
 }
 
-export default UpdateInvoiceModel;
+export default ViewInvoiceModel;

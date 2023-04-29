@@ -2,6 +2,10 @@ import {
   Autocomplete,
   Box,
   Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
   TextField,
   Typography,
 } from "@mui/material";
@@ -13,6 +17,9 @@ import { colors } from "@/theme";
 import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import InvoiceModel from "../Models/InvoiceModel";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import moment from 'moment';
+
 
 // validation schema
 const checkoutSchema = yup.object().shape({
@@ -30,11 +37,13 @@ const checkoutSchema = yup.object().shape({
 });
 
 const InvoiceForm = ({
+  isViewForm,
   isUpdateForm,
   fromData,
   customersData,
   handleInvoice,
 }) => {
+  console.log("fromData :", fromData);
   //mobile responsive
   const isNonMobile = useMediaQuery("(min-width:600px)");
   // date formate
@@ -46,15 +55,18 @@ const InvoiceForm = ({
   });
 
   //check the customer is available in the customer data
-  const isCheckCustomer = customersData.find(
-    (customer) =>
-      customer.attributes.fName + " " + customer.attributes.lName ===
-      fromData.customerName
-  );
+
+  const isCheckCustomer =
+    isUpdateForm &&
+    customersData.find(
+      (customer) =>
+        `${customer.attributes.fName} ${customer.attributes.lName}` ===
+        fromData.customerName
+    );
 
   //form initial values
   const initialValues = {
-    customerName: isUpdateForm ? isCheckCustomer : "",
+    customerName: isUpdateForm ? isCheckCustomer : null,
     items: isUpdateForm
       ? fromData.items.map((item) => ({
           itemCode: item.itemCode,
@@ -62,6 +74,13 @@ const InvoiceForm = ({
           price: item.price,
         }))
       : [{ itemCode: "", description: "", price: "" }],
+    payments: isUpdateForm
+      ? fromData?.payments?.map((payment) => ({
+          description: payment.description,
+          amount: payment.amount,
+          date: payment.date,
+        }))
+      : [{ description: "", date: null, amount: "" }],
   };
 
   const [formSubmitted, setFormSubmitted] = useState(false);
@@ -124,14 +143,23 @@ const InvoiceForm = ({
 
   return (
     <Box m="20px">
-      <Header
-        title={`${isUpdateForm ? `UPDATE INVOICE` : `CREATE INVOICE`}`}
-        subtitle={`${
-          isUpdateForm
-            ? `Update Customer Invoice`
-            : `Create a New Customer Invoice`
-        }`}
-      />
+      {isViewForm ? (
+        <>
+          <Header title={`VIEW INVOICE`} subtitle={`VIEW Customer Invoice`} />
+        </>
+      ) : (
+        <>
+          <Header
+            title={`${isUpdateForm ? `UPDATE INVOICE` : `CREATE INVOICE`}`}
+            subtitle={`${
+              isUpdateForm
+                ? `Update Customer Invoice`
+                : `Create a New Customer Invoice`
+            }`}
+          />
+        </>
+      )}
+
       <Box
         m="20px"
         p="40px"
@@ -172,11 +200,15 @@ const InvoiceForm = ({
                   "& > div": { gridColumn: isNonMobile ? undefined : "span 4" },
                 }}
               >
+                <Typography color={"gray"} sx={{ textTransform: "uppercase" }}>
+                  Customer Details
+                </Typography>
                 <Autocomplete
+                  disabled={isUpdateForm}
                   sx={{ gridColumn: "span 4" }}
                   options={customersData}
                   getOptionLabel={(option) =>
-                    `${option.attributes.fName} ${option.attributes.lName}`
+                    `${option?.attributes?.fName} ${option?.attributes?.lName}`
                   }
                   value={selectedCustomer}
                   onChange={(event, newValue) => {
@@ -192,7 +224,7 @@ const InvoiceForm = ({
                       {...params}
                       label="Customer Name"
                       name="customerName"
-                      value={values.customerName}
+                      value={JSON.stringify(values.customerName)}
                       onBlur={handleBlur}
                       onChange={handleChange}
                       error={
@@ -212,21 +244,53 @@ const InvoiceForm = ({
                   disabled
                 />
                 <TextField
+                  disabled
                   label="Mobile Number"
                   name="mobileNumber"
                   value={customerDetails.mobileNumber}
                   sx={{ gridColumn: "span 3" }}
                   onChange={handleChange}
-                  disabled
                 />
                 <TextField
+                  disabled
                   sx={{ gridColumn: "span 4" }}
                   label="Address"
                   name="address"
                   value={customerDetails.address}
                   onChange={handleChange}
-                  disabled
                 />
+                <Box sx={{ gridColumn: "span 4", gap: "30px" }}>
+                  {/* shipment status select box   */}
+                  <Typography
+                    color={"gray"}
+                    sx={{ textTransform: "uppercase" }}
+                  >
+                    Shipment Details
+                  </Typography>
+                  <FormControl fullWidth sx={{ mt: 3, minWidth: 80 }}>
+                    <InputLabel id="shipmentStatus">Status</InputLabel>
+                    <Select
+                      disabled={isViewForm}
+                      labelId="shipmentStatus"
+                      id="shipmentStatus"
+                      value={values.shipmentStatus}
+                      onChange={handleChange}
+                      autoWidth
+                      label="Status"
+                    >
+                      <MenuItem value="">
+                        <em>None</em>
+                      </MenuItem>
+                      <MenuItem value={"pending"}>Pending</MenuItem>
+                      <MenuItem value={"refund"}>Refund</MenuItem>
+                      <MenuItem value={"shipped"}>Shipped</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                <Typography color={"gray"} sx={{ textTransform: "uppercase" }}>
+                  Product Details
+                </Typography>
                 <FieldArray name="items">
                   {({ push, remove, form }) => (
                     <Box sx={{ gridColumn: "span 4", gap: "30px" }}>
@@ -239,6 +303,7 @@ const InvoiceForm = ({
                           gridTemplateColumns="repeat(4, minmax(0, 1fr))"
                         >
                           <TextField
+                            disabled={isViewForm}
                             name={`items[${index}].itemCode`}
                             label="Item Code"
                             value={item.itemCode}
@@ -254,6 +319,7 @@ const InvoiceForm = ({
                             }
                           />
                           <TextField
+                            disabled={isViewForm}
                             name={`items[${index}].description`}
                             label="Description"
                             value={item.description}
@@ -269,6 +335,7 @@ const InvoiceForm = ({
                             }
                           />
                           <TextField
+                            disabled={isViewForm}
                             name={`items[${index}].price`}
                             label="Price"
                             value={item.price}
@@ -284,26 +351,129 @@ const InvoiceForm = ({
                               form.errors.items?.[index]?.price
                             }
                           />
-                          <Button
-                            type="button"
-                            onClick={() => remove(index)}
-                            variant="contained"
-                            color="error"
-                          >
-                            Remove
-                          </Button>
+                          {!isViewForm && (
+                            <Button
+                              type="button"
+                              onClick={() => remove(index)}
+                              variant="contained"
+                              color="error"
+                            >
+                              Remove
+                            </Button>
+                          )}
                         </Box>
                       ))}
-                      <Button
-                        type="button"
-                        onClick={() =>
-                          push({ itemCode: "", description: "", price: "" })
-                        }
-                        variant="contained"
-                        color="primary"
-                      >
-                        Add Item
-                      </Button>
+                      {!isViewForm && (
+                        <Button
+                          type="button"
+                          onClick={() =>
+                            push({ itemCode: "", description: "", price: "" })
+                          }
+                          variant="contained"
+                          color="primary"
+                        >
+                          Add Item
+                        </Button>
+                      )}
+                    </Box>
+                  )}
+                </FieldArray>
+
+                {/* payment status select box   */}
+                <Typography color={"gray"} sx={{ textTransform: "uppercase" }}>
+                  Payment Details
+                </Typography>
+                <FieldArray name="payments">
+                  {({ push, remove, form }) => (
+                    <Box sx={{ gridColumn: "span 4", gap: "30px" }}>
+                      {form.values.payments?.map((payment, index) => (
+                        <Box
+                          key={index}
+                          display="grid"
+                          pb={"20px"}
+                          gap="30px"
+                          gridTemplateColumns="repeat(4, minmax(0, 1fr))"
+                        >
+                          <TextField
+                            disabled={isViewForm}
+                            name={`payments[${index}].description`}
+                            label="Description"
+                            value={payment.description}
+                            onChange={form.handleChange}
+                            onBlur={form.handleBlur}
+                            error={
+                              form.touched.payments?.[index]?.description &&
+                              Boolean(
+                                form.errors.payments?.[index]?.description
+                              )
+                            }
+                            helperText={
+                              form.touched.payments?.[index]?.description &&
+                              form.errors.payments?.[index]?.description
+                            }
+                          />
+                          <DatePicker
+                            disabled={isViewForm}
+                            name={`payments[${index}].date`}
+                            label="Date"
+                            value={moment(payment.date)} // convert payment date to moment.js object
+                            onChange={(value) =>
+                              form.setFieldValue(
+                                `payments[${index}].date`,
+                                moment(value).toISOString() // convert moment.js object back to ISO string
+                              )
+                            }
+                            onBlur={form.handleBlur}
+                            error={
+                              form.touched.payments?.[index]?.date &&
+                              Boolean(form.errors.payments?.[index]?.date)
+                            }
+                            helperText={
+                              form.touched.payments?.[index]?.date &&
+                              form.errors.payments?.[index]?.date
+                            }
+                          />
+                          <TextField
+                            disabled={isViewForm}
+                            name={`payments[${index}].amount`}
+                            label="Amount"
+                            value={payment.amount}
+                            onChange={form.handleChange}
+                            onBlur={form.handleBlur}
+                            type="number"
+                            error={
+                              form.touched.payments?.[index]?.amount &&
+                              Boolean(form.errors.payments?.[index]?.amount)
+                            }
+                            helperText={
+                              form.touched.payments?.[index]?.amount &&
+                              form.errors.payments?.[index]?.amount
+                            }
+                          />
+                          {!isViewForm && (
+                            <Button
+                              type="button"
+                              onClick={() => remove(index)}
+                              variant="contained"
+                              color="error"
+                            >
+                              Remove
+                            </Button>
+                          )}
+                        </Box>
+                      ))}
+                      {!isViewForm && (
+                        <Button
+                          type="button"
+                          onClick={() =>
+                            push({ description: "", date: null, amount: "" })
+                          }
+                          variant="contained"
+                          color="primary"
+                        >
+                          Add Payment
+                        </Button>
+                      )}
                     </Box>
                   )}
                 </FieldArray>
@@ -316,11 +486,13 @@ const InvoiceForm = ({
                   Total Price: {getTotalPrice(values.items).toFixed(2)}
                 </Box>
               </Box>
-              <Box display="flex" justifyContent="end" mt="20px">
-                <Button type="submit" color="secondary" variant="contained">
-                  Generate Invoice
-                </Button>
-              </Box>
+              {!isViewForm && (
+                <Box display="flex" justifyContent="end" mt="20px">
+                  <Button type="submit" color="secondary" variant="contained">
+                    Generate Invoice
+                  </Button>
+                </Box>
+              )}
             </Form>
           )}
         </Formik>

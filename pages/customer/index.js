@@ -1,6 +1,6 @@
 import DLayout from "@/components/Layout/DLayout";
 import CustomerTable from "@/components/Table/CustomerTable";
-import { fectcher } from "@/lib/api";
+import  fectcher  from "../../lib/api";
 import useSWR from "swr";
 import { useState } from "react";
 

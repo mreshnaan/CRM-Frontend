@@ -1,7 +1,7 @@
 import DLayout from "@/components/Layout/DLayout";
 import CustomerForm from "@/components/Form/CustomerForm";
 import { useState } from "react";
-import { fectcher } from "@/lib/api";
+import  fectcher from "@/lib/api";
 import toast from "react-hot-toast";
 
 export default function CreateCustomers() {

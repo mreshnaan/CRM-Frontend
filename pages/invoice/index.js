@@ -1,5 +1,5 @@
 import DLayout from "@/components/Layout/DLayout";
-import { fectcher } from "@/lib/api";
+import  fectcher  from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
 import InvoiceTable from "@/components/Table/InvoiceTable";

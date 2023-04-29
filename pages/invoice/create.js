@@ -1,6 +1,6 @@
 import DLayout from "@/components/Layout/DLayout";
 import InvoiceForm from "@/components/Form/InvoiceForm";
-import { fectcher } from "@/lib/api";
+import fectcher from "@/lib/api";
 import { toast } from "react-hot-toast";
 import ItemForm from "@/components/Form/itemForm";
 
@@ -20,6 +20,8 @@ export default function CreateInvoice({ customers }) {
               customer: data.customerId,
               invoiceNumber: data.invoiceNumber,
               items: data.items,
+              payments: data.payments,
+              
             },
           }),
         }
@@ -42,7 +44,6 @@ export default function CreateInvoice({ customers }) {
           customersData={customers}
           handleInvoice={handleCraeteInvoice}
         />
-        <ItemForm />
       </DLayout>
     </>
   );

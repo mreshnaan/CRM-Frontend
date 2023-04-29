@@ -6,15 +6,18 @@ import { colors } from "../../theme";
 import Header from "../HeaderTitle";
 import UpdateCustomerModel from "../Models/updateCustomerModel";
 import { useState } from "react";
-import InvoiceModel from "../Models/InvoiceModel";
 import RemoveCustomerModel from "../Models/RemoveCustomerModel";
 
 const CustomerTable = ({ data, page, size, onPageChange, pageSize }) => {
-  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [updateModel, setUpdateModel] = useState(false);
+  const [removeModel, setRemoveModel] = useState(false);
   const [formData, setFormData] = useState(null);
 
-  const handleClose = () => {
-    setFormSubmitted(false);
+  const handleUpdateClose = () => {
+    setUpdateModel(false);
+  };
+  const handleRemoveClose = () => {
+    setRemoveModel(false);
   };
 
   const columns = [
@@ -58,14 +61,12 @@ const CustomerTable = ({ data, page, size, onPageChange, pageSize }) => {
       renderCell: (params) => {
         const handleEdit = (data) => {
           // Handle edit button click for this row
-          setFormSubmitted(true);
+          setUpdateModel(true);
           setFormData(data);
         };
 
         const handleRemove = () => {
-          // Handle remove button click for this row
-          // setFormSubmitted({ data: id, open: true });
-          setFormSubmitted(true);
+          setRemoveModel(true);
           setFormData(data);
         };
         return (
@@ -136,18 +137,18 @@ const CustomerTable = ({ data, page, size, onPageChange, pageSize }) => {
           },
         }}
       >
-        {formSubmitted && (
+        {updateModel && (
           <UpdateCustomerModel
-            modelOpen={formSubmitted}
+            modelOpen={updateModel}
             data={formData}
-            handleClose={handleClose}
+            handleClose={handleUpdateClose}
           />
         )}
-        {formSubmitted && (
+        {removeModel && (
           <RemoveCustomerModel
-            modelOpen={formSubmitted}
+            modelOpen={removeModel}
             data={formData}
-            handleClose={handleClose}
+            handleClose={handleRemoveClose}
           />
         )}
         <DataGrid
