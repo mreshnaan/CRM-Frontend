@@ -27,7 +27,7 @@ export default function CreateCustomers() {
         }),
       });
       toast.success("Successfully Created");
-      history.reload("/customer");
+      history.push("/customer");
     } catch (error) {
       toast.error(error);
       console.error("error with request", error);

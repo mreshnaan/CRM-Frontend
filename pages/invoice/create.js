@@ -30,7 +30,7 @@ export default function CreateInvoice({ customers }) {
 
       if (response.ok) {
         toast.success("Successfully Created");
-        history.reload("/invoice");
+        history.push("/invoice");
       } else {
         throw new Error(`Request failed with status ${response.status}`);
       }
