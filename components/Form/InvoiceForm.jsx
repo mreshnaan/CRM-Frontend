@@ -19,6 +19,7 @@ import { v4 as uuidv4 } from "uuid";
 import InvoiceModel from "../Models/InvoiceModel";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import moment from "moment";
+import dayjs from "dayjs";
 
 // validation schema
 const checkoutSchema = yup.object().shape({
@@ -42,7 +43,11 @@ const InvoiceForm = ({
   customersData,
   handleInvoice,
 }) => {
-  console.log("fromData :", fromData);
+  //filter only to get customers name
+  const customerNames = customersData.map(
+    (customer) => `${customer.attributes.fName} ${customer.attributes.lName}`
+  );
+
   //mobile responsive
   const isNonMobile = useMediaQuery("(min-width:600px)");
   // date formate
@@ -61,26 +66,31 @@ const InvoiceForm = ({
         `${customer.attributes.fName} ${customer.attributes.lName}` ===
         fromData.customerName
     );
-
   //form initial values
-  const [initialValues, setInitialValues] = useState({
-    customerName: isCheckCustomer,
-    items: isUpdateForm
-      ? fromData.items.map((item) => ({
-          itemCode: item.itemCode,
-          description: item.description,
-          price: item.price,
-        }))
-      : [{ itemCode: "", description: "", price: "" }],
-    payments: isUpdateForm
-      ? fromData?.payments?.map((payment) => ({
-          description: payment.description,
-          amount: payment.amount,
-          date: payment.date,
-        }))
-      : [{ description: "", date: null, amount: "" }],
-  });
+  const initialCustomerName = isCheckCustomer
+    ? `${isCheckCustomer.attributes.fName} ${isCheckCustomer.attributes.lName}`
+    : null;
+  const initialItems = isUpdateForm
+    ? fromData.items.map((item) => ({
+        itemCode: item.itemCode,
+        description: item.description,
+        price: item.price,
+      }))
+    : [{ itemCode: "", description: "", price: "" }];
 
+  const initialPayments = isUpdateForm
+    ? fromData?.payments?.map((payment) => ({
+        description: payment.description,
+        amount: payment.amount,
+        date: payment.date,
+      }))
+    : [{ description: "", date: null, amount: "" }];
+
+  const [initialValues, setInitialValues] = useState({
+    customerName: initialCustomerName,
+    items: initialItems,
+    payments: initialPayments,
+  });
 
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState("");
@@ -95,39 +105,35 @@ const InvoiceForm = ({
   });
 
   useEffect(() => {
-    if (isUpdateForm) {
-      let getCustomer = customersData.find(
-        (customer) =>
-          `${customer.attributes.fName} ${customer.attributes.lName}` ===
-          fromData.customerName
-      );
-      console.log("getCustomer : ", getCustomer);
-      setInitialValues(
-        `${getCustomer.attributes.fName} ${getCustomer.attributes.lName}`
-      );
-      setCustomerDetails({
-        address: getCustomer.attributes.address,
-        mobileNumber: getCustomer.attributes.mobile,
-        customerId: getCustomer.id,
+    const getCustomer = (name) => {
+      return customersData.find((customer) => {
+        return (
+          `${customer.attributes.fName} ${customer.attributes.lName}` === name
+        );
       });
+    };
+
+    const setCustomer = (customer) => {
+      setInitialValues({
+        customerName: `${customer.attributes.fName} ${customer.attributes.lName}`,
+      });
+
+      setCustomerDetails({
+        address: customer.attributes.address,
+        mobileNumber: customer.attributes.mobile,
+        customerId: customer.id,
+      });
+    };
+
+    if (isUpdateForm) {
+      const customer = getCustomer(fromData.customerName);
+      console.log("getCustomer : ", customer);
+      setCustomer(customer);
     } else {
       if (selectedCustomer) {
-        let getCustomer = customersData.find(
-          (customer) =>
-            `${customer.attributes.fName} ${customer.attributes.lName}` ===
-            `${selectedCustomer.attributes.fName} ${selectedCustomer.attributes.lName}`
-        );
-        setInitialValues(
-          `${getCustomer.attributes.fName} ${getCustomer.attributes.lName}`
-        );
-        // // Update the customer details state with the selected customer's details
-        setCustomerDetails({
-          address: getCustomer.attributes.address,
-          mobileNumber: getCustomer.attributes.mobile,
-          customerId: getCustomer.id,
-        });
+        const customer = getCustomer(selectedCustomer);
+        setCustomer(customer);
       } else {
-        // Reset the customer details state if no customer is selected
         setCustomerDetails({
           address: "",
           mobileNumber: "",
@@ -168,7 +174,7 @@ const InvoiceForm = ({
     <Box m="20px">
       {isViewForm ? (
         <>
-          <Header title={`VIEW INVOICE`} subtitle={`VIEW Customer Invoice`} />
+          <Header title={`VIEW INVOICE`} subtitle={`View Customer Invoice`} />
         </>
       ) : (
         <>
@@ -229,18 +235,11 @@ const InvoiceForm = ({
                 <Autocomplete
                   disabled={isUpdateForm}
                   sx={{ gridColumn: "span 4" }}
-                  options={customersData}
-                  getOptionLabel={(option) =>
-                    `${option?.attributes.fName} ${option?.attributes.lName}`
-                  }
+                  options={customerNames}
                   value={selectedCustomer}
                   onChange={(event, newValue) => {
                     setSelectedCustomer(newValue);
-                    handleChange("customerName")(
-                      newValue
-                        ? `${newValue.attributes.fName} ${newValue.attributes.lName}`
-                        : ""
-                    );
+                    handleChange("customerName")(newValue);
                   }}
                   renderInput={(params) => (
                     <TextField
@@ -323,7 +322,9 @@ const InvoiceForm = ({
                           display="grid"
                           pb={"20px"}
                           gap="30px"
-                          gridTemplateColumns="repeat(4, minmax(0, 1fr))"
+                          gridTemplateColumns={`repeat(${
+                            isViewForm ? 3 : 4
+                          }, minmax(0, 1fr))`}
                         >
                           <TextField
                             disabled={isViewForm}
@@ -415,7 +416,9 @@ const InvoiceForm = ({
                           display="grid"
                           pb={"20px"}
                           gap="30px"
-                          gridTemplateColumns="repeat(4, minmax(0, 1fr))"
+                          gridTemplateColumns={`repeat(${
+                            isViewForm ? 3 : 4
+                          }, minmax(0, 1fr))`}
                         >
                           <TextField
                             disabled={isViewForm}
@@ -439,11 +442,11 @@ const InvoiceForm = ({
                             disabled={isViewForm}
                             name={`payments[${index}].date`}
                             label="Date"
-                            value={moment(payment.date)} // convert payment date to moment.js object
+                            value={dayjs(payment.date)}
                             onChange={(value) =>
                               form.setFieldValue(
                                 `payments[${index}].date`,
-                                moment(value).toISOString() // convert moment.js object back to ISO string
+                                dayjs(value)
                               )
                             }
                             onBlur={form.handleBlur}

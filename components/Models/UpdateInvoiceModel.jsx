@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Modal, Box } from "@mui/material";
 import InvoiceForm from "../Form/InvoiceForm";
 import { toast } from "react-hot-toast";
-import  fectcher  from "@/lib/api";
+import fectcher from "@/lib/api";
 
 function UpdateInvoiceModel({ modelOpen, data, handleClose }) {
   const [invoiceData, setInvoiceData] = useState(null);
@@ -31,12 +31,13 @@ function UpdateInvoiceModel({ modelOpen, data, handleClose }) {
               invoiceNumber: values.firstName,
               customer: values.customerId,
               items: values.items,
+              payments: values.payments,
             },
           }),
         }
       );
       if (response.ok) {
-        toast.success("Successfully Created");
+        toast.success("Successfully Updated");
       } else {
         throw new Error(`Request failed with status ${response.status}`);
       }
