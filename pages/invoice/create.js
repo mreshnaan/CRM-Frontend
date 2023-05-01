@@ -2,9 +2,10 @@ import DLayout from "@/components/Layout/DLayout";
 import InvoiceForm from "@/components/Form/InvoiceForm";
 import fectcher from "@/lib/api";
 import { toast } from "react-hot-toast";
-import ItemForm from "@/components/Form/itemForm";
+import { useRouter } from "next/router";
 
 export default function CreateInvoice({ customers }) {
+  const history = useRouter();
   const handleCraeteInvoice = async (data) => {
     console.log("handleCraeteInvoice ", data);
     try {
@@ -29,6 +30,7 @@ export default function CreateInvoice({ customers }) {
 
       if (response.ok) {
         toast.success("Successfully Created");
+        history.reload("/invoice");
       } else {
         throw new Error(`Request failed with status ${response.status}`);
       }

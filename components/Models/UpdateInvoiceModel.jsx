@@ -3,10 +3,12 @@ import { Modal, Box } from "@mui/material";
 import InvoiceForm from "../Form/InvoiceForm";
 import { toast } from "react-hot-toast";
 import fectcher from "@/lib/api";
+import { useRouter } from "next/router";
 
 function UpdateInvoiceModel({ modelOpen, data, handleClose }) {
   const [invoiceData, setInvoiceData] = useState(null);
   const [customers, setCustomers] = useState(null);
+  const history = useRouter();
 
   useEffect(() => {
     if (modelOpen) {
@@ -38,6 +40,7 @@ function UpdateInvoiceModel({ modelOpen, data, handleClose }) {
       );
       if (response.ok) {
         toast.success("Successfully Updated");
+        history.reload("/invoice");
       } else {
         throw new Error(`Request failed with status ${response.status}`);
       }

@@ -3,8 +3,10 @@ import CustomerForm from "@/components/Form/CustomerForm";
 import { useState } from "react";
 import  fectcher from "@/lib/api";
 import toast from "react-hot-toast";
+import { useRouter } from "next/router";
 
 export default function CreateCustomers() {
+  const history = useRouter();
 
   const handleFormData = async (values) => {
     try {
@@ -25,6 +27,7 @@ export default function CreateCustomers() {
         }),
       });
       toast.success("Successfully Created");
+      history.reload("/customer");
     } catch (error) {
       toast.error(error);
       console.error("error with request", error);

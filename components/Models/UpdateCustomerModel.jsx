@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Button, Typography, Box } from "@mui/material";
+import { Modal, Box } from "@mui/material";
 import CustomerForm from "../Form/CustomerForm";
 import { toast } from "react-hot-toast";
+import { useRouter } from "next/router";
 
 function UpdateCustomerModel({ modelOpen, data, handleClose }) {
   const [customerData, setCustomerData] = useState(null);
+  const history = useRouter();
 
   useEffect(() => {
     const handleGetCustomer = async () => {
@@ -67,7 +69,8 @@ function UpdateCustomerModel({ modelOpen, data, handleClose }) {
         }
       );
       if (response.ok) {
-        toast.success("Successfully Created");
+        toast.success("Successfully Updated");
+        history.reload("/customer");
       } else {
         throw new Error(`Request failed with status ${response.status}`);
       }
@@ -75,6 +78,7 @@ function UpdateCustomerModel({ modelOpen, data, handleClose }) {
       toast.error(error);
       console.error("error with request", error);
     }
+
     handleClose();
   };
 
@@ -90,7 +94,7 @@ function UpdateCustomerModel({ modelOpen, data, handleClose }) {
               transform: "translate(-50%, -50%)",
               width: "50%",
               bgcolor: "background.paper",
-              borderRadius:"16px",
+              borderRadius: "16px",
               boxShadow: 24,
               p: 4,
             }}

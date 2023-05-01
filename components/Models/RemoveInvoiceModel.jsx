@@ -1,8 +1,10 @@
 import React from "react";
 import { Modal, Button, Typography, Box } from "@mui/material";
 import { toast } from "react-hot-toast";
+import { useRouter } from "next/router";
 
 function RemoveInvoiceModel({ modelOpen, data, handleClose }) {
+  const history = useRouter();
   const handleRemoveInvoice = async () => {
     try {
       if (data.id == null) return null;
@@ -16,7 +18,8 @@ function RemoveInvoiceModel({ modelOpen, data, handleClose }) {
         }
       );
       if (response.ok) {
-        toast.success("Successfully Deleted");
+        toast.success("Successfully Remove");
+        history.reload("/invoice");
       } else {
         throw new Error(`Request failed with status ${response.status}`);
       }
@@ -56,7 +59,7 @@ function RemoveInvoiceModel({ modelOpen, data, handleClose }) {
               component={"h1"}
               sx={{ color: "black", fontSize: "1.1rem" }}
             >
-              ARE YOU SURE YOU WANT DELETE THIS
+              ARE YOU SURE YOU WANT REMOVE THIS
             </Typography>
             <Box
               sx={{ display: "flex", justifyContent: "center", gap: "20px" }}

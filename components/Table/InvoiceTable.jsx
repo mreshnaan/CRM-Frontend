@@ -111,7 +111,7 @@ const InvoiceTable = ({ data, page, size, onPageChange, pageSize }) => {
     ({ id, attributes: { invoiceNumber, customer, items } }) => ({
       id,
       invoiceNumber,
-      customer: `${customer.data.attributes.fName} ${customer.data.attributes.lName}`,
+      customer: customer.data && `${customer.data.attributes.fName} ${customer.data.attributes.lName}`,
       items,
     })
   );
