@@ -40,4 +40,20 @@ export const menuItems = [
       },
     ],
   },
+  {
+    title: "Saler Management",
+    icon: <PeopleOutlinedIcon />,
+    submenu: [
+      {
+        title: "Salers",
+        icon: <PeopleOutlinedIcon />,
+        to: "/saler",
+      },
+      {
+        title: "Create",
+        icon: <PeopleOutlinedIcon />,
+        to: "/saler/create",
+      },
+    ],
+  },
 ];

@@ -7,20 +7,44 @@ import { useRouter } from "next/router";
 
 function UpdateInvoiceModel({ modelOpen, data, handleClose }) {
   const [invoiceData, setInvoiceData] = useState(null);
-  const [customers, setCustomers] = useState(null);
+
   const history = useRouter();
 
   useEffect(() => {
     if (modelOpen) {
-      handleGetCustomers();
       handleGetInvoice();
     }
   }, [data.id, modelOpen]);
 
+  const uploadPaymentReceipt = async (invoiceId, paidReceipt) => {
+    // Upload the file
+    const formData = new FormData();
+    formData.append("files", paidReceipt);
+    formData.append("ref", invoiceId);
+    formData.append("refId", invoiceId);
+    const uploadResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_STRAPI_URL}/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+    const uploadedFiles = await uploadResponse.json();
+    console.log("upload file  : ", uploadedFiles);
+    // const uploadedFileUrl = uploadedFiles[0].url;
+    return uploadedFiles[0];
+  };
+
   const handleFormData = async (values) => {
-    console.log(values);
     try {
       if (data.id == null) return null;
+      const imageURL = await uploadPaymentReceipt(
+        data?.id,
+        values?.paidReceipt
+      );
+      if (!imageURL) {
+        console.log("error : ", imageURL);
+      }
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_STRAPI_URL}/invoices/${data.id}`,
         {
@@ -34,15 +58,17 @@ function UpdateInvoiceModel({ modelOpen, data, handleClose }) {
               customer: values.customerId,
               items: values.items,
               payments: values.payments,
+              paidReceipt: imageURL,
             },
           }),
         }
       );
       if (response.ok) {
         toast.success("Successfully Updated");
-        history.reload("/invoice");
+        // history.reload("/invoice");
       } else {
-        throw new Error(`Request failed with status ${response.status}`);
+        const error = await response.json();
+        throw new Error(error.error.message);
       }
     } catch (error) {
       toast.error(error);
@@ -51,16 +77,6 @@ function UpdateInvoiceModel({ modelOpen, data, handleClose }) {
     handleClose();
   };
 
-  const handleGetCustomers = async () => {
-    try {
-      const customersResponse = await fectcher(
-        `${process.env.NEXT_PUBLIC_STRAPI_URL}/customers`
-      );
-      setCustomers(customersResponse.data);
-    } catch (error) {
-      console.error("error with request", error);
-    }
-  };
 
   const handleGetInvoice = async () => {
     try {
@@ -77,15 +93,21 @@ function UpdateInvoiceModel({ modelOpen, data, handleClose }) {
 
       if (response.ok) {
         const invoiceData = await response.json();
-        console.log("invoice Data : ", invoiceData);
         setInvoiceData({
           invoiceNumber: invoiceData.data.attributes.invoiceNumber,
+          salesCode:invoiceData.data.attributes.salesCode,
           items: invoiceData.data.attributes.items,
           payments: invoiceData.data.attributes.payments,
-          customerName: `${invoiceData.data.attributes.customer.data.attributes.fName} ${invoiceData.data.attributes.customer.data.attributes.lName}`,
+          customerName:
+            invoiceData.data.attributes.customer.data.attributes.customerName,
+          salerName:
+            invoiceData.data.attributes.saler.data.attributes.salerName,
+          paidReceipt: invoiceData.data.attributes.paidReceipt,
+          shipmentDetails: invoiceData.data.attributes.shipmentDetails,
         });
       } else {
-        throw new Error(`Request failed with status ${response.status}`);
+        const error = await response.json();
+        throw new Error(error.error.message);
       }
     } catch (error) {
       console.error("error with request", error);
@@ -132,7 +154,6 @@ function UpdateInvoiceModel({ modelOpen, data, handleClose }) {
              */}
             {invoiceData && (
               <InvoiceForm
-                customersData={customers}
                 isUpdateForm={true}
                 fromData={invoiceData}
                 handleInvoice={handleFormData}

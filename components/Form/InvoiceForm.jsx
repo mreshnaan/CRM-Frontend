@@ -1,52 +1,68 @@
-import {
-  Autocomplete,
-  Box,
-  Button,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  TextField,
-  Typography,
-} from "@mui/material";
-import { FieldArray, Form, Formik } from "formik";
+import { Box, Button, TextField, Typography } from "@mui/material";
+import { Form, Formik } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../HeaderTitle";
 import { colors } from "@/theme";
 import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import InvoiceModel from "../Models/InvoiceModel";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import moment from "moment";
-import dayjs from "dayjs";
+// import InvoiceModel from "../Models/InvoiceModel";
+import ItemFields from "./Invoice/ItemFields";
+import PaymentFields from "./Invoice/paymentFields";
+// import CustomerFields from "./Invoice/CustomerFields";
+// import SalerFields from "./Invoice/SalerFields";
+import ImageUpload from "./Invoice/imageUpload";
+import {
+  getInitialItemValues,
+  getInitialPaymentValues,
+  getInitialShipmentValues,
+} from "@/helpers/invoiceHelper";
+import ShipmentFields from "./Invoice/ShipmentFields";
+import AutocompleteCustomer from "./AutocompleteCustomer";
+import AutocompleteSaler from "./AutocompleteSaler";
+import { generateInvoicePDF } from "../Invoice/GenerateInvoice";
 
 // validation schema
 const checkoutSchema = yup.object().shape({
   customerName: yup.string().required("Customer name is required"),
+  salerName: yup.string().required("Customer name is required"),
+  salesCode: yup.string().required("sales code is required"),
   items: yup.array().of(
     yup.object().shape({
       itemCode: yup.string().required("Required"),
-      description: yup.string().required("Required"),
+      name: yup.string().required("Required"),
+      make: yup.string().required("Required"),
+      model: yup.string().required("Required"),
+      year: yup.date().required("Required"),
+      engine: yup.string().required("Required"),
+      chssiss: yup.string().required("Required"),
+      freight: yup
+        .number()
+        .required("Required")
+        .positive("Amount must be a positive number")
+        .min(0, "Freight must be greater than or equal to 0"),
       price: yup
         .number()
         .required("Required")
+        .positive("Amount must be a positive number")
         .min(0, "Price must be greater than or equal to 0"),
     })
   ),
+  shipmentDetails: yup.object().shape({
+    portOfShipment: yup.string().required("Port of Shipment is required"),
+    portOfDelivery: yup.string().required("Port of Delivery is required"),
+    dateOfShipment: yup.string().required("Date of Shipment is required"),
+    paymentTerms: yup.string().required("Payment Terms is required"),
+    status: yup.string().required("Status is required"),
+    dateOfExpire: yup.string().required("Date of Expire is required"),
+    latestShipmentDate: yup
+      .string()
+      .required("Latest Shipment Date is required"),
+  }),
 });
 
-const InvoiceForm = ({
-  isViewForm,
-  isUpdateForm,
-  fromData,
-  customersData,
-  handleInvoice,
-}) => {
-  //filter only to get customers name
-  const customerNames = customersData.map(
-    (customer) => `${customer.attributes.fName} ${customer.attributes.lName}`
-  );
+const InvoiceForm = (props) => {
+  const { isViewForm, isUpdateForm, fromData, handleInvoice } = props;
 
   //mobile responsive
   const isNonMobile = useMediaQuery("(min-width:600px)");
@@ -58,136 +74,129 @@ const InvoiceForm = ({
     year: "numeric",
   });
 
-  //check the customer is available in the customer data
-  const isCheckCustomer =
-    isUpdateForm &&
-    customersData.find(
-      (customer) =>
-        `${customer.attributes.fName} ${customer.attributes.lName}` ===
-        fromData.customerName
-    );
-  //form initial values
-  const initialCustomerName = isCheckCustomer
-    ? `${isCheckCustomer.attributes.fName} ${isCheckCustomer.attributes.lName}`
-    : null;
-  const initialItems = isUpdateForm
-    ? fromData.items.map((item) => ({
-        itemCode: item.itemCode,
-        description: item.description,
-        price: item.price,
-      }))
-    : [{ itemCode: "", description: "", price: "" }];
+  const initialItems = getInitialItemValues(fromData);
 
-  const initialPayments = isUpdateForm
-    ? fromData?.payments?.map((payment) => ({
-        description: payment.description,
-        amount: payment.amount,
-        date: payment.date,
-      }))
-    : [{ description: "", date: null, amount: "" }];
+  const initialPayments = getInitialPaymentValues(fromData);
+
+  const initialShipmentDetails = getInitialShipmentValues(fromData);
 
   const [initialValues, setInitialValues] = useState({
-    customerName: initialCustomerName,
+    customerName: fromData ? fromData.customerName : null,
+    salesCode: fromData ? fromData.salesCode : "",
+    salerName: fromData ? fromData.salerName : null,
     items: initialItems,
     payments: initialPayments,
+    paidReceipt: null,
+    shipmentDetails: initialShipmentDetails,
   });
 
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [allDetails, setAlldetails] = useState();
-  const [selectedCustomer, setSelectedCustomer] = useState(
-    initialValues.customerName
-  );
+  // const [allDetails, setAlldetails] = useState();
+
   const [customerDetails, setCustomerDetails] = useState({
     address: "",
+    email: "",
     mobileNumber: "",
     customerId: "",
   });
 
+  const [salerDetails, setSalerDetails] = useState({
+    address: "",
+    email: "",
+    mobileNumber: "",
+    salerId: "",
+  });
+
   useEffect(() => {
-    const getCustomer = (name) => {
-      return customersData.find((customer) => {
-        return (
-          `${customer.attributes.fName} ${customer.attributes.lName}` === name
-        );
-      });
-    };
-
-    const setCustomer = (customer) => {
-      setInitialValues({
-        customerName: `${customer.attributes.fName} ${customer.attributes.lName}`,
-      });
-
-      setCustomerDetails({
-        address: customer.attributes.address,
-        mobileNumber: customer.attributes.mobile,
-        customerId: customer.id,
-      });
-    };
-
-    if (isUpdateForm) {
-      const customer = getCustomer(fromData.customerName);
-      console.log("getCustomer : ", customer);
-      setCustomer(customer);
-    } else {
-      if (selectedCustomer) {
-        const customer = getCustomer(selectedCustomer);
-        setCustomer(customer);
-      } else {
-        setCustomerDetails({
-          address: "",
-          mobileNumber: "",
-          customerId: "",
-        });
-      }
+    if (fromData && fromData.customerName != undefined) {
+      setInitialValues((prevValues) => ({
+        ...prevValues,
+        customerName: fromData.customerName,
+        salerName: fromData.salerName,
+      }));
     }
-  }, [selectedCustomer]);
+  }, [fromData]);
+
+  // useEffect(() => {
+  //   if (fromData.paidReceipt !== undefined && fromData.paidReceipt !== null) {
+  //     setInitialValues((prevValues) => ({
+  //       ...prevValues,
+  //       paidReceipt: fromData.paidReceipt,
+  //     }));
+  //   }
+  // }, [fromData]);
 
   //when reloads the page Generate a new invoice number
+  // Generate a new invoice number
   useEffect(() => {
-    setInvoiceNumber(uuidv4());
+    const generateInvoiceNumber = () => {
+      const uniqueId = uuidv4().split("-")[0]; // Extracting the first part of the UUID
+      const shortenedId = uniqueId.slice(0, 8); // Taking the first 8 characters
+      setInvoiceNumber(shortenedId);
+    };
+
+    generateInvoiceNumber();
   }, []);
 
   //get total price of the items
+  const getTotalAmount = (items) => {
+    return items.reduce((total, item) => {
+      return (
+        total + parseFloat(item.freight || 0) + parseFloat(item.price || 0)
+      );
+    }, 0);
+  };
+
   const getTotalPrice = (items) => {
     return items.reduce((total, item) => {
       return total + parseFloat(item.price || 0);
     }, 0);
   };
+  const getTotalFreight = (items) => {
+    return items.reduce((total, item) => {
+      return total + parseFloat(item.freight || 0);
+    }, 0);
+  };
 
   //model close
-  const handleClose = () => {
-    setFormSubmitted(false);
-  };
+  // const handleClose = () => {
+  //   setFormSubmitted(false);
+  // };
 
   //form submit
   const handleFormSubmit = (values) => {
-    const mergedObj = Object.assign({}, values, customerDetails, {
-      invoiceNumber,
+    const mergedObj = {
+      ...values,
+      customerDetails,
+      salerDetails,
+      invoiceNumber: fromData ? fromData.invoiceNumber : invoiceNumber,
       today,
-    });
-    setAlldetails(mergedObj);
-    setFormSubmitted(true);
+    };
+    // setAlldetails(mergedObj);
+    // setFormSubmitted(true);
+    handleInvoice(mergedObj)
+    generateInvoicePDF(mergedObj);
   };
 
   return (
     <Box m="20px">
-      {isViewForm ? (
-        <>
-          <Header title={`VIEW INVOICE`} subtitle={`View Customer Invoice`} />
-        </>
-      ) : (
-        <>
-          <Header
-            title={`${isUpdateForm ? `UPDATE INVOICE` : `CREATE INVOICE`}`}
-            subtitle={`${
-              isUpdateForm
-                ? `Update Customer Invoice`
-                : `Create a New Customer Invoice`
-            }`}
-          />
-        </>
-      )}
+      <Header
+        title={`${
+          isViewForm
+            ? "VIEW INVOICE"
+            : isUpdateForm
+            ? "UPDATE INVOICE"
+            : "CREATE INVOICE"
+        }`}
+        subtitle={`${
+          isViewForm
+            ? "View Customer Invoice"
+            : isUpdateForm
+            ? "Update Customer Invoice"
+            : "Create a New Customer Invoice"
+        }`}
+      />
 
       <Box
         m="20px"
@@ -206,20 +215,27 @@ const InvoiceForm = ({
             {isUpdateForm ? fromData.invoiceNumber : invoiceNumber}
           </Typography>
         </Box>
-        {formSubmitted && (
+        {/* {formSubmitted && (
           <InvoiceModel
             modelOpen={formSubmitted}
             data={allDetails}
             handleClose={handleClose}
             handleInvoice={handleInvoice}
           />
-        )}
+        )} */}
         <Formik
           onSubmit={handleFormSubmit}
           initialValues={initialValues}
           validationSchema={checkoutSchema}
         >
-          {({ values, errors, touched, handleBlur, handleChange }) => (
+          {({
+            values,
+            errors,
+            touched,
+            handleBlur,
+            handleChange,
+            setFieldValue,
+          }) => (
             <Form>
               <Box
                 display="grid"
@@ -229,280 +245,111 @@ const InvoiceForm = ({
                   "& > div": { gridColumn: isNonMobile ? undefined : "span 4" },
                 }}
               >
+                <TextField
+                  disabled={isViewForm}
+                  sx={{ gridColumn: "span 4" }}
+                  name={`salesCode`}
+                  label="Sales Code"
+                  value={values.salesCode}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={touched.salesCode && Boolean(errors.salesCode)}
+                  helperText={touched.salesCode && errors.salesCode}
+                />
+
                 <Typography color={"gray"} sx={{ textTransform: "uppercase" }}>
                   Customer Details
                 </Typography>
-                <Autocomplete
-                  disabled={isUpdateForm}
-                  sx={{ gridColumn: "span 4" }}
-                  options={customerNames}
-                  value={selectedCustomer}
-                  onChange={(event, newValue) => {
-                    setSelectedCustomer(newValue);
-                    handleChange("customerName")(newValue);
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Customer Name"
-                      name="customerName"
-                      value={values.customerName}
-                      onBlur={handleBlur}
-                      onChange={handleChange}
-                      error={
-                        touched.customerName && Boolean(errors.customerName)
-                      }
-                      helperText={touched.customerName && errors.customerName}
-                    />
-                  )}
+
+                <AutocompleteCustomer
+                  values={values}
+                  errors={errors}
+                  touched={touched}
+                  handleBlur={handleBlur}
+                  handleChange={handleChange}
+                  initialCustomerName={initialValues.customerName}
+                  setCustomerDetails={setCustomerDetails}
+                  customerDetails={customerDetails}
+                  setFieldValue={setFieldValue}
+                  setInitialValues={setInitialValues}
+                  isUpdateForm={isUpdateForm}
                 />
 
-                <TextField
-                  label="Customer ID"
-                  name="customerId"
-                  value={customerDetails.customerId}
-                  onChange={handleChange}
-                  sx={{ gridColumn: "span 1" }}
-                  disabled
+                <Typography color={"gray"} sx={{ textTransform: "uppercase" }}>
+                  Saler Details
+                </Typography>
+
+                <AutocompleteSaler
+                  values={values}
+                  errors={errors}
+                  touched={touched}
+                  handleBlur={handleBlur}
+                  handleChange={handleChange}
+                  initialSalerName={initialValues.salerName}
+                  setSalerDetails={setSalerDetails}
+                  salerDetails={salerDetails}
+                  setFieldValue={setFieldValue}
+                  setInitialValues={setInitialValues}
+                  isUpdateForm={isUpdateForm}
                 />
-                <TextField
-                  disabled
-                  label="Mobile Number"
-                  name="mobileNumber"
-                  value={customerDetails.mobileNumber}
-                  sx={{ gridColumn: "span 3" }}
-                  onChange={handleChange}
-                />
-                <TextField
-                  disabled
-                  sx={{ gridColumn: "span 4" }}
-                  label="Address"
-                  name="address"
-                  value={customerDetails.address}
-                  onChange={handleChange}
-                />
-                <Box sx={{ gridColumn: "span 4", gap: "30px" }}>
-                  {/* shipment status select box   */}
-                  <Typography
-                    color={"gray"}
-                    sx={{ textTransform: "uppercase" }}
-                  >
-                    Shipment Details
-                  </Typography>
-                  <FormControl fullWidth sx={{ mt: 3, minWidth: 80 }}>
-                    <InputLabel id="shipmentStatus">Status</InputLabel>
-                    <Select
-                      disabled={isViewForm}
-                      labelId="shipmentStatus"
-                      id="shipmentStatus"
-                      value={values.shipmentStatus}
-                      onChange={handleChange}
-                      autoWidth
-                      label="Status"
-                    >
-                      <MenuItem value="">
-                        <em>None</em>
-                      </MenuItem>
-                      <MenuItem value={"pending"}>Pending</MenuItem>
-                      <MenuItem value={"refund"}>Refund</MenuItem>
-                      <MenuItem value={"shipped"}>Shipped</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
 
                 <Typography color={"gray"} sx={{ textTransform: "uppercase" }}>
                   Product Details
                 </Typography>
-                <FieldArray name="items">
-                  {({ push, remove, form }) => (
-                    <Box sx={{ gridColumn: "span 4", gap: "30px" }}>
-                      {form.values.items.map((item, index) => (
-                        <Box
-                          key={index}
-                          display="grid"
-                          pb={"20px"}
-                          gap="30px"
-                          gridTemplateColumns={`repeat(${
-                            isViewForm ? 3 : 4
-                          }, minmax(0, 1fr))`}
-                        >
-                          <TextField
-                            disabled={isViewForm}
-                            name={`items[${index}].itemCode`}
-                            label="Item Code"
-                            value={item.itemCode}
-                            onChange={form.handleChange}
-                            onBlur={form.handleBlur}
-                            error={
-                              form.touched.items?.[index]?.itemCode &&
-                              Boolean(form.errors.items?.[index]?.itemCode)
-                            }
-                            helperText={
-                              form.touched.items?.[index]?.itemCode &&
-                              form.errors.items?.[index]?.itemCode
-                            }
-                          />
-                          <TextField
-                            disabled={isViewForm}
-                            name={`items[${index}].description`}
-                            label="Description"
-                            value={item.description}
-                            onChange={form.handleChange}
-                            onBlur={form.handleBlur}
-                            error={
-                              form.touched.items?.[index]?.description &&
-                              Boolean(form.errors.items?.[index]?.description)
-                            }
-                            helperText={
-                              form.touched.items?.[index]?.description &&
-                              form.errors.items?.[index]?.description
-                            }
-                          />
-                          <TextField
-                            disabled={isViewForm}
-                            name={`items[${index}].price`}
-                            label="Price"
-                            value={item.price}
-                            onChange={form.handleChange}
-                            onBlur={form.handleBlur}
-                            type="number"
-                            error={
-                              form.touched.items?.[index]?.price &&
-                              Boolean(form.errors.items?.[index]?.price)
-                            }
-                            helperText={
-                              form.touched.items?.[index]?.price &&
-                              form.errors.items?.[index]?.price
-                            }
-                          />
-                          {!isViewForm && (
-                            <Button
-                              type="button"
-                              onClick={() => remove(index)}
-                              variant="contained"
-                              color="error"
-                            >
-                              Remove
-                            </Button>
-                          )}
-                        </Box>
-                      ))}
-                      {!isViewForm && (
-                        <Button
-                          type="button"
-                          onClick={() =>
-                            push({ itemCode: "", description: "", price: "" })
-                          }
-                          variant="contained"
-                          color="primary"
-                        >
-                          Add Item
-                        </Button>
-                      )}
-                    </Box>
-                  )}
-                </FieldArray>
+
+                <ItemFields isViewForm={isViewForm} items={values.items} />
+                {/* shipment details   */}
+
+                <Typography color={"gray"}>Shipment Details</Typography>
+                <ShipmentFields
+                  isViewForm={isViewForm}
+                  values={values}
+                  errors={errors}
+                  touched={touched}
+                  handleBlur={handleBlur}
+                  handleChange={handleChange}
+                  setFieldValue={setFieldValue}
+                />
 
                 {/* payment status select box   */}
-                <Typography color={"gray"} sx={{ textTransform: "uppercase" }}>
-                  Payment Details
-                </Typography>
-                <FieldArray name="payments">
-                  {({ push, remove, form }) => (
-                    <Box sx={{ gridColumn: "span 4", gap: "30px" }}>
-                      {form.values.payments?.map((payment, index) => (
-                        <Box
-                          key={index}
-                          display="grid"
-                          pb={"20px"}
-                          gap="30px"
-                          gridTemplateColumns={`repeat(${
-                            isViewForm ? 3 : 4
-                          }, minmax(0, 1fr))`}
-                        >
-                          <TextField
-                            disabled={isViewForm}
-                            name={`payments[${index}].description`}
-                            label="Description"
-                            value={payment.description}
-                            onChange={form.handleChange}
-                            onBlur={form.handleBlur}
-                            error={
-                              form.touched.payments?.[index]?.description &&
-                              Boolean(
-                                form.errors.payments?.[index]?.description
-                              )
-                            }
-                            helperText={
-                              form.touched.payments?.[index]?.description &&
-                              form.errors.payments?.[index]?.description
-                            }
-                          />
-                          <DatePicker
-                            disabled={isViewForm}
-                            name={`payments[${index}].date`}
-                            label="Date"
-                            value={dayjs(payment.date)}
-                            onChange={(value) =>
-                              form.setFieldValue(
-                                `payments[${index}].date`,
-                                dayjs(value)
-                              )
-                            }
-                            onBlur={form.handleBlur}
-                            error={
-                              form.touched.payments?.[index]?.date &&
-                              Boolean(form.errors.payments?.[index]?.date)
-                            }
-                            helperText={
-                              form.touched.payments?.[index]?.date &&
-                              form.errors.payments?.[index]?.date
-                            }
-                          />
-                          <TextField
-                            disabled={isViewForm}
-                            name={`payments[${index}].amount`}
-                            label="Amount"
-                            value={payment.amount}
-                            onChange={form.handleChange}
-                            onBlur={form.handleBlur}
-                            type="number"
-                            error={
-                              form.touched.payments?.[index]?.amount &&
-                              Boolean(form.errors.payments?.[index]?.amount)
-                            }
-                            helperText={
-                              form.touched.payments?.[index]?.amount &&
-                              form.errors.payments?.[index]?.amount
-                            }
-                          />
-                          {!isViewForm && (
-                            <Button
-                              type="button"
-                              onClick={() => remove(index)}
-                              variant="contained"
-                              color="error"
-                            >
-                              Remove
-                            </Button>
-                          )}
-                        </Box>
-                      ))}
-                      {!isViewForm && (
-                        <Button
-                          type="button"
-                          onClick={() =>
-                            push({ description: "", date: null, amount: "" })
-                          }
-                          variant="contained"
-                          color="primary"
-                        >
-                          Add Payment
-                        </Button>
-                      )}
-                    </Box>
-                  )}
-                </FieldArray>
+                {fromData && (
+                  <>
+                    <Typography
+                      color={"gray"}
+                      sx={{
+                        textTransform: "uppercase",
+                        display: `${
+                          isViewForm &&
+                          fromData.payments[0].description == "" &&
+                          "none"
+                        }`,
+                      }}
+                    >
+                      Payment Details
+                    </Typography>
+                    <PaymentFields
+                      isViewForm={isViewForm}
+                      payments={values.payments}
+                    />
+                  </>
+                )}
+                {/* payment receipt   */}
+
+                <ImageUpload
+                  initialValues={fromData && fromData.paidReceipt}
+                  isUpdateForm={isUpdateForm}
+                  isViewForm={isViewForm}
+                  setFieldValue={setFieldValue}
+                />
+
+                <Box
+                  display={"flex"}
+                  color={"black"}
+                  justifyContent={"flex-end"}
+                  sx={{ gridColumn: "span 4" }}
+                >
+                  Total Freight: {getTotalFreight(values.items).toFixed(2)}
+                </Box>
                 <Box
                   display={"flex"}
                   color={"black"}
@@ -510,6 +357,15 @@ const InvoiceForm = ({
                   sx={{ gridColumn: "span 4" }}
                 >
                   Total Price: {getTotalPrice(values.items).toFixed(2)}
+                </Box>
+
+                <Box
+                  display={"flex"}
+                  color={"black"}
+                  justifyContent={"flex-end"}
+                  sx={{ gridColumn: "span 4" }}
+                >
+                  Total Amount: {getTotalAmount(values.items).toFixed(2)}
                 </Box>
               </Box>
               {!isViewForm && (

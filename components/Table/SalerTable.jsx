@@ -1,24 +1,17 @@
 import { Box, IconButton } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import ViewIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { colors } from "../../theme";
 import Header from "../HeaderTitle";
+import UpdateCustomerModel from "../Models/updateCustomerModel";
 import { useState } from "react";
-import UpdateInvoiceModel from "../Models/UpdateInvoiceModel";
-import RemoveInvoiceModel from "../Models/RemoveInvoiceModel";
-import ViewInvoiceModel from "../Models/ViewInvoiceModel";
+import RemoveCustomerModel from "../Models/RemoveCustomerModel";
 
-const InvoiceTable = ({ data, page, size, onPageChange, pageSize }) => {
-  const [viewModel, setViewModel] = useState(false);
+const SalerTable = ({ data, page, size, onPageChange, pageSize }) => {
   const [updateModel, setUpdateModel] = useState(false);
   const [removeModel, setRemoveModel] = useState(false);
-  const [tableData, setTableData] = useState(null);
-
-  const handleViewClose = () => {
-    setViewModel(false);
-  };
+  const [formData, setFormData] = useState(null);
 
   const handleUpdateClose = () => {
     setUpdateModel(false);
@@ -32,28 +25,34 @@ const InvoiceTable = ({ data, page, size, onPageChange, pageSize }) => {
       field: "id",
       headerName: "ID",
       flex: 1,
-      cellClassName: "invoice-id-column--cell",
+      cellClassName: "saler-id-column--cell",
     },
     {
-      field: "invoiceNumber",
-      headerName: "Invoice Number",
+      field: "salerName",
+      headerName: "Saler Name",
       flex: 1,
-      cellClassName: "invoice-number-column--cell",
+      cellClassName: "salerName-column--cell",
     },
     {
-      field: "customer",
-      headerName: "Customer Name",
+      field: "email",
+      headerName: "Email",
       flex: 1,
-      cellClassName: "customer-column--cell",
+      cellClassName: "email-column--cell",
     },
     {
-      field: "items",
-      headerName: "Total",
+      field: "personType",
+      headerName: "Person Type",
       flex: 1,
-      renderCell: (params) =>
-        params.value.reduce((total, item) => {
-          return total + parseFloat(item.price || 0);
-        }, 0),
+    },
+    {
+      field: "country",
+      headerName: "Country",
+      flex: 1,
+    },
+    {
+      field: "mobile",
+      headerName: "Mobile",
+      flex: 1,
     },
     {
       field: "actions",
@@ -61,31 +60,18 @@ const InvoiceTable = ({ data, page, size, onPageChange, pageSize }) => {
       sortable: false,
       flex: 1,
       renderCell: (params) => {
-        const handleView = (param) => {
-          // Handle edit button click for this row
-          setViewModel(true);
-          setTableData(param.row);
-        };
-        const handleEdit = (param) => {
+        const handleEdit = () => {
           // Handle edit button click for this row
           setUpdateModel(true);
-          setTableData(param.row);
+          setFormData(params);
         };
 
-        const handleRemove = (param) => {
+        const handleRemove = () => {
           setRemoveModel(true);
-          setTableData(param.row);
+          setFormData(params);
         };
         return (
           <div>
-            <IconButton
-              sx={{ color: `${colors.grey[500]} !important` }}
-              onClick={() => {
-                handleView(params);
-              }}
-            >
-              <ViewIcon />
-            </IconButton>
             <IconButton
               sx={{ color: `${colors.grey[500]} !important` }}
               onClick={() => {
@@ -108,17 +94,22 @@ const InvoiceTable = ({ data, page, size, onPageChange, pageSize }) => {
 
   // array of objects into a new array with only the necessary properties
   const rows = data?.data?.map(
-    ({ id, attributes: { invoiceNumber, customer, items } }) => ({
+    ({
       id,
-      invoiceNumber,
-      customer: customer.data && customer.data.attributes.customerName,
-      items,
+      attributes: { salerName, email, personType, country, mobile },
+    }) => ({
+      id,
+      salerName,
+      email,
+      personType,
+      country,
+      mobile,
     })
   );
 
   return (
     <Box m="20px">
-      <Header title="Customer Invoices" subtitle="List of Customer Invoice" />
+      <Header title="Saler" subtitle="List of Salers" />
       <Box
         m="40px 0 0 0"
         height="75vh"
@@ -148,32 +139,19 @@ const InvoiceTable = ({ data, page, size, onPageChange, pageSize }) => {
           "& .MuiCheckbox-root": {
             color: `${colors.greenAccent[200]} !important`,
           },
-          "& .item-select": {
-            color: colors.white[400],
-          },
-          "& .item-options": {
-            color: colors.black[400],
-          },
         }}
       >
-        {viewModel && (
-          <ViewInvoiceModel
-            modelOpen={viewModel}
-            data={tableData}
-            handleClose={handleViewClose}
-          />
-        )}
         {updateModel && (
-          <UpdateInvoiceModel
+          <UpdateCustomerModel
             modelOpen={updateModel}
-            data={tableData}
+            data={formData}
             handleClose={handleUpdateClose}
           />
         )}
         {removeModel && (
-          <RemoveInvoiceModel
+          <RemoveCustomerModel
             modelOpen={removeModel}
-            data={tableData}
+            data={formData}
             handleClose={handleRemoveClose}
           />
         )}
@@ -191,4 +169,4 @@ const InvoiceTable = ({ data, page, size, onPageChange, pageSize }) => {
   );
 };
 
-export default InvoiceTable;
+export default SalerTable;

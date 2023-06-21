@@ -26,15 +26,16 @@ function UpdateCustomerModel({ modelOpen, data, handleClose }) {
           const customerData = await response.json();
           console.log("customer Data : ", customerData);
           setCustomerData({
-            firstName: customerData.data.attributes.fName,
-            lastName: customerData.data.attributes.lName,
+            customerName: customerData.data.attributes.customerName,
             personType: customerData.data.attributes.personType,
             mobile: customerData.data.attributes.mobile,
+            email: customerData.data.attributes.email,
             address: customerData.data.attributes.address,
             country: customerData.data.attributes.country,
           });
         } else {
-          throw new Error(`Request failed with status ${response.status}`);
+          const error = await response.json();
+          throw new Error(error.error.message);
         }
       } catch (error) {
         console.error("error with request", error);
@@ -58,8 +59,7 @@ function UpdateCustomerModel({ modelOpen, data, handleClose }) {
           },
           body: JSON.stringify({
             data: {
-              fName: values.firstName,
-              lName: values.lastName,
+              customerName: values.customerName,
               personType: values.personType,
               country: values.country,
               mobile: values.mobile,
@@ -72,7 +72,8 @@ function UpdateCustomerModel({ modelOpen, data, handleClose }) {
         toast.success("Successfully Updated");
         history.reload("/customer");
       } else {
-        throw new Error(`Request failed with status ${response.status}`);
+        const error = await response.json();
+        throw new Error(error.error.message);
       }
     } catch (error) {
       toast.error(error);

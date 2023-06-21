@@ -1,23 +1,11 @@
-import { useEffect, useState } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { Box, Typography, Button, TextField } from "@mui/material";
 import { setToken } from "../../lib/auth";
 import Link from "next/link";
-import { useFetchUser } from "@/lib/Context/auth";
-import { useRouter } from "next/router";
 import { toast } from "react-hot-toast";
 
 const Register = () => {
-  const { user, loading } = useFetchUser();
-  const history = useRouter();
-
-  useEffect(() => {
-    if (!loading && user) {
-      history.replace("/dashboard");
-    }
-  }, [loading, user, history]);
-
   const RegisterSchema = Yup.object().shape({
     identifier: Yup.string().required("User Name Required"),
     email: Yup.string()
@@ -53,7 +41,9 @@ const Register = () => {
         setToken(userData);
         toast.success("Successfully Register");
       } else {
-        toast.error("Invalid Username or password");
+        const error = await response.json();
+        console.log(error)
+        throw new Error(error.error.message);
       }
     } catch (error) {
       toast.error(error.message);

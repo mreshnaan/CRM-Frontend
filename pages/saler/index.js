@@ -1,12 +1,12 @@
 import DLayout from "@/components/Layout/DLayout";
-import CustomerTable from "@/components/Table/CustomerTable";
-import fectcher from "../../lib/api";
+import fectcher from "@/lib/api";
 import useSWR from "swr";
 import { useEffect, useState } from "react";
+import SalerTable from "@/components/Table/SalerTable";
 import { useFetchUser } from "@/lib/Context/auth";
 import { useRouter } from "next/router";
 
-export default function Customers({ customers }) {
+export default function Salers({ salers }) {
   const { user, loading } = useFetchUser();
   const history = useRouter();
 
@@ -19,10 +19,10 @@ export default function Customers({ customers }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const { data } = useSWR(
-    `${process.env.NEXT_PUBLIC_STRAPI_URL}/customers?pagination[page]=${page}&pagination[pageSize]=${pageSize}`,
+    `${process.env.NEXT_PUBLIC_STRAPI_URL}/salers?pagination[page]=${page}&pagination[pageSize]=${pageSize}&populate=*`,
     fectcher,
     {
-      fallbackData: customers,
+      fallbackData: salers,
     }
   );
   const handlePageChange = (newPage) => {
@@ -36,7 +36,7 @@ export default function Customers({ customers }) {
   return (
     <>
       <DLayout>
-        <CustomerTable
+        <SalerTable
           data={data}
           page={page}
           size={pageSize}
@@ -49,12 +49,12 @@ export default function Customers({ customers }) {
 }
 
 export async function getServerSideProps() {
-  const customersResponse = await fectcher(
-    `${process.env.NEXT_PUBLIC_STRAPI_URL}/customers?pagination[page]=1&pagination[pageSize]=10`
+  const salersResponse = await fectcher(
+    `${process.env.NEXT_PUBLIC_STRAPI_URL}/salers?pagination[page]=1&pagination[pageSize]=10&populate=*`
   );
   return {
     props: {
-      customers: customersResponse,
+        salers: salersResponse,
     },
   };
 }

@@ -28,15 +28,16 @@ const CustomerTable = ({ data, page, size, onPageChange, pageSize }) => {
       cellClassName: "user-id-column--cell",
     },
     {
-      field: "fName",
-      headerName: "First Name",
+      field: "customerName",
+      headerName: "Customer Name",
       flex: 1,
-      cellClassName: "fName-column--cell",
+      cellClassName: "customerName-column--cell",
     },
     {
-      field: "lName",
-      headerName: "Last Name",
+      field: "email",
+      headerName: "Email",
       flex: 1,
+      cellClassName: "email-column--cell",
     },
     {
       field: "personType",
@@ -93,10 +94,13 @@ const CustomerTable = ({ data, page, size, onPageChange, pageSize }) => {
 
   // array of objects into a new array with only the necessary properties
   const rows = data?.data?.map(
-    ({ id, attributes: { fName, lName, personType, country, mobile } }) => ({
+    ({
       id,
-      fName,
-      lName,
+      attributes: { customerName, email, personType, country, mobile },
+    }) => ({
+      id,
+      customerName,
+      email,
       personType,
       country,
       mobile,

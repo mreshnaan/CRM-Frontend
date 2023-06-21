@@ -1,31 +1,13 @@
 import React, { useState, useRef } from "react";
 import { Modal, Button, Typography } from "@mui/material";
 import Invoice from "../Invoice/invoice";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+// import html2canvas from "html2canvas";
+// import jsPDF from "jspdf";
+import { generateInvoicePDF } from "../Invoice/GenerateInvoice";
 
 function InvoiceModel({ modelOpen, data, handleClose, handleInvoice }) {
   const invoiceRef = useRef(null);
 
-  const handleDownload = async () => {
-    try {
-      const dom = invoiceRef.current;
-      const canvas = await html2canvas(dom);
-      const imgData = canvas.toDataURL("image/png");
-
-      const pdf = new jsPDF("p", "mm", "a4");
-      const imgWidth = 210;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      let position = 0;
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      position += imgHeight;
-
-      pdf.save("invoice.pdf");
-    } catch (error) {
-      console.error("oops, something went wrong!", error);
-    }
-  };
 
   return (
     <div>
@@ -60,7 +42,7 @@ function InvoiceModel({ modelOpen, data, handleClose, handleInvoice }) {
             variant="contained"
             onClick={() => {
               handleInvoice(data);
-              handleDownload();
+              generateInvoicePDF(data);
             }}
           >
             Create & Download

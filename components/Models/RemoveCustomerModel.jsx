@@ -21,7 +21,8 @@ function RemoveCustomerModel({ modelOpen, data, handleClose }) {
         toast.success("Successfully Deleted");
         history.reload("/customer");
       } else {
-        throw new Error(`Request failed with status ${response.status}`);
+        const error = await response.json();
+        throw new Error(error.error.message);
       }
     } catch (error) {
       toast.error(error);

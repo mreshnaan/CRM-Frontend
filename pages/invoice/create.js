@@ -3,9 +3,18 @@ import InvoiceForm from "@/components/Form/InvoiceForm";
 import fectcher from "@/lib/api";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/router";
+import { useFetchUser } from "@/lib/Context/auth";
+import { useEffect } from "react";
 
-export default function CreateInvoice({ customers }) {
+export default function CreateInvoice() {
+  const { user, loading } = useFetchUser();
   const history = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      history.replace("/");
+    }
+  }, [loading, user, history]);
   const handleCraeteInvoice = async (data) => {
     console.log("handleCraeteInvoice ", data);
     try {
@@ -18,11 +27,13 @@ export default function CreateInvoice({ customers }) {
           },
           body: JSON.stringify({
             data: {
-              customer: data.customerId,
+              customer: data.customerDetails.customerId,
+              saler: data.salerDetails.salerId,
+              salesCode: data.salesCode,
               invoiceNumber: data.invoiceNumber,
               items: data.items,
               payments: data.payments,
-              
+              shipmentDetails: data.shipmentDetails,
             },
           }),
         }
@@ -32,7 +43,8 @@ export default function CreateInvoice({ customers }) {
         toast.success("Successfully Created");
         history.push("/invoice");
       } else {
-        throw new Error(`Request failed with status ${response.status}`);
+        const error = await response.json();
+        throw new Error(error.error.message);
       }
     } catch (error) {
       toast.error(error.message);
@@ -43,7 +55,6 @@ export default function CreateInvoice({ customers }) {
     <>
       <DLayout>
         <InvoiceForm
-          customersData={customers}
           handleInvoice={handleCraeteInvoice}
         />
       </DLayout>
@@ -51,13 +62,3 @@ export default function CreateInvoice({ customers }) {
   );
 }
 
-export async function getServerSideProps() {
-  const customersResponse = await fectcher(
-    `${process.env.NEXT_PUBLIC_STRAPI_URL}/customers`
-  );
-  return {
-    props: {
-      customers: customersResponse.data,
-    },
-  };
-}

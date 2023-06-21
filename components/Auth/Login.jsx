@@ -1,34 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { Box, Typography, Button, TextField } from "@mui/material";
 import { setToken } from "../../lib/auth";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
-import { useFetchUser } from "@/lib/Context/auth";
-import { useRouter } from "next/router";
 
 const Login = () => {
-  const { user, loading } = useFetchUser();
-  const history = useRouter();
-
-  useEffect(() => {
-    if (!loading && user) {
-      history.replace("/dashboard");
-    }
-  }, [loading, user, history]);
-
   const LoginSchema = Yup.object().shape({
     identifier: Yup.string().required("User Name Required"),
-    email: Yup.string()
-      .email("Invalid email address")
-      .required("Email Required"),
     password: Yup.string().required("Password Required"),
   });
 
   const handleLogin = async (values, { setSubmitting }) => {
     try {
-      if (!values.identifier || !values.email || !values.password) {
+      if (!values.identifier || !values.password) {
         setLoginError("Please fill all fields");
         setSubmitting(false);
         return;
@@ -52,7 +38,9 @@ const Login = () => {
         setToken(userData);
         toast.success("Successfully Login");
       } else {
-        throw new Error(`Request failed with status ${response.status}`);
+        const error = await response.json();
+        console.log(error)
+        throw new Error(error.error.message);
       }
     } catch (error) {
       toast.error(error.message);
@@ -125,20 +113,6 @@ const Login = () => {
                     ? errors.identifier
                     : ""
                 }
-              />
-              <Field
-                as={TextField}
-                name="email"
-                label="Email"
-                variant="outlined"
-                margin="normal"
-                fullWidth
-                autoFocus
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.email}
-                error={touched.email && !values.email}
-                helperText={touched.email && errors.email ? errors.email : ""}
               />
 
               <Field

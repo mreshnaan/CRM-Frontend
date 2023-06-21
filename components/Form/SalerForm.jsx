@@ -5,15 +5,13 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../HeaderTitle";
 import { colors } from "@/theme";
 
-const CustomerForm = ({ isUpdateForm, isViewForm, fromData, setFromData }) => {
-  console.log("from data : ", fromData);
+const SalerForm = ({ isUpdateForm, isViewForm, fromData, setFromData }) => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
   const initialValues = {
-    customerName: isUpdateForm ? fromData.customerName : null,
+    salerName: isUpdateForm ? fromData.salerName : null,
     email: isUpdateForm ? fromData.email : null,
     personType: isUpdateForm ? fromData.personType : null,
     mobile: isUpdateForm ? fromData.mobile : null,
-    telephone: isUpdateForm ? fromData.telephone : null,
     address: isUpdateForm ? fromData.address : null,
     country: isUpdateForm ? fromData.country : null,
   };
@@ -23,7 +21,7 @@ const CustomerForm = ({ isUpdateForm, isViewForm, fromData, setFromData }) => {
     /^((\+[1-9]{1,4}[ -]?)|(\([0-9]{2,3}\)[ -]?)|([0-9]{2,4})[ -]?)*?[0-9]{3,4}[ -]?[0-9]{3,4}$/;
 
   const checkoutSchema = yup.object().shape({
-    customerName: yup.string().required("required"),
+    salerName: yup.string().required("required"),
     email: yup.string().email("invalid email").required("required"),
     personType: yup.string().required("required"),
     mobile: yup
@@ -45,17 +43,17 @@ const CustomerForm = ({ isUpdateForm, isViewForm, fromData, setFromData }) => {
       <Header
         title={`${
           isViewForm
-            ? "VIEW CUSTOMER"
+            ? "VIEW SALER"
             : isUpdateForm
-            ? "UPDATE CUSTOMER"
-            : "CREATE CUSTOMER"
+            ? "UPDATE SALER"
+            : "CREATE SALER"
         }`}
         subtitle={`${
           isViewForm
-            ? "View Customer"
+            ? "View Saler"
             : isUpdateForm
-            ? "Update Customer"
-            : "Create a New Customer"
+            ? "Update Saler"
+            : "Create a New Saler"
         }`}
       />
       
@@ -100,13 +98,13 @@ const CustomerForm = ({ isUpdateForm, isViewForm, fromData, setFromData }) => {
                 fullWidth
                 variant="filled"
                 type="text"
-                label="Customer Name"
+                label="Saler Name"
                 onBlur={handleBlur}
                 onChange={handleChange}
-                value={values.customerName}
-                name="customerName"
-                error={!!touched.customerName && !!errors.customerName}
-                helperText={touched.customerName && errors.customerName}
+                value={values.salerName}
+                name="salerName"
+                error={!!touched.salerName && !!errors.salerName}
+                helperText={touched.salerName && errors.salerName}
                 sx={{ gridColumn: "span 2" }}
               />
               <TextField
@@ -172,20 +170,6 @@ const CustomerForm = ({ isUpdateForm, isViewForm, fromData, setFromData }) => {
                 fullWidth
                 variant="filled"
                 type="text"
-                label="Telephone Number"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.telephone}
-                name="telephone"
-                error={!!touched.telephone && !!errors.telephone}
-                helperText={touched.telephone && errors.telephone}
-                sx={{ gridColumn: "span 2" }}
-              />
-
-              <TextField
-                fullWidth
-                variant="filled"
-                type="text"
                 label="Address"
                 onBlur={handleBlur}
                 onChange={handleChange}
@@ -198,7 +182,7 @@ const CustomerForm = ({ isUpdateForm, isViewForm, fromData, setFromData }) => {
             </Box>
             <Box display="flex" justifyContent="end" mt="20px">
               <Button type="submit" color="secondary" variant="contained">
-                {isUpdateForm ? "Update Customer" : "Create New Customer"}
+                {isUpdateForm ? "Update saler" : "Create New saler"}
               </Button>
             </Box>
           </form>
@@ -208,4 +192,4 @@ const CustomerForm = ({ isUpdateForm, isViewForm, fromData, setFromData }) => {
   );
 };
 
-export default CustomerForm;
+export default SalerForm;

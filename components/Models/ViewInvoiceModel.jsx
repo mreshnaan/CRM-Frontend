@@ -1,30 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Box } from "@mui/material";
+import { Modal, Box, CircularProgress } from "@mui/material";
 import InvoiceForm from "../Form/InvoiceForm";
-import { toast } from "react-hot-toast";
 import fectcher from "@/lib/api";
 
 function ViewInvoiceModel({ modelOpen, data, handleClose }) {
   const [invoiceData, setInvoiceData] = useState(null);
-  const [customers, setCustomers] = useState(null);
+  const [loading, setLoading] = useState(true); // Added loading state
 
   useEffect(() => {
     if (modelOpen) {
-      handleGetCustomers();
       handleGetInvoice();
     }
   }, [data.id, modelOpen]);
-
-  const handleGetCustomers = async () => {
-    try {
-      const customersResponse = await fectcher(
-        `${process.env.NEXT_PUBLIC_STRAPI_URL}/customers`
-      );
-      setCustomers(customersResponse.data);
-    } catch (error) {
-      console.error("error with request", error);
-    }
-  };
 
   const handleGetInvoice = async () => {
     try {
@@ -44,15 +31,24 @@ function ViewInvoiceModel({ modelOpen, data, handleClose }) {
         console.log("invoice Data : ", invoiceData);
         setInvoiceData({
           invoiceNumber: invoiceData.data.attributes.invoiceNumber,
+          salesCode: invoiceData.data.attributes.salesCode,
           items: invoiceData.data.attributes.items,
           payments: invoiceData.data.attributes.payments,
-          customerName: `${invoiceData.data.attributes.customer.data.attributes.fName} ${invoiceData.data.attributes.customer.data.attributes.lName}`,
+          salerName:
+            invoiceData.data.attributes.saler.data.attributes.salerName,
+          customerName:
+            invoiceData.data.attributes.customer.data.attributes.customerName,
+          paidReceipt: invoiceData.data.attributes.paidReceipt,
+          shipmentDetails: invoiceData.data.attributes.shipmentDetails,
         });
       } else {
-        throw new Error(`Request failed with status ${response.status}`);
+        const error = await response.json();
+        throw new Error(error.error.message);
       }
     } catch (error) {
       console.error("error with request", error);
+    } finally {
+      setLoading(false); // Set loading to false when the data is received or an error occurs
     }
   };
 
@@ -88,19 +84,19 @@ function ViewInvoiceModel({ modelOpen, data, handleClose }) {
               },
             }}
           >
-            {/* params
-             * customerData is for select options in form
-             * isUpdateForm is for use update from
-             * fromData is for to send the initial values to the form
-             * handleInvoice is for get the values from the invoice model
-             */}
-            {invoiceData && (
-              <InvoiceForm
-                isViewForm={true}
-                customersData={customers}
-                isUpdateForm={true}
-                fromData={invoiceData}
-              />
+            {/* Show loading spinner while data is being fetched */}
+            {loading ? (
+              <CircularProgress />
+            ) : (
+              <>
+                {invoiceData && (
+                  <InvoiceForm
+                    isViewForm={true}
+                    isUpdateForm={true}
+                    fromData={invoiceData}
+                  />
+                )}
+              </>
             )}
           </Box>
         </Modal>
